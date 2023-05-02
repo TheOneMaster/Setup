@@ -1,49 +1,54 @@
-# General logic
-$choices = '&Yes', '&No';
+Install-Module PSMenu
 
-function Install-Software {
-    param (
-        [string[]]$softwareList,
-        [string]$softwareType
-    )
+$choices = @("General", "Media", "Admin", "Developer");
+Write-Output "Use arrow keys to navigate, spacebar to select, and enter to confirm selection";
+$selected = Show-Menu -MenuItems $choices -MultiSelect;
 
-    $decision = $Host.UI.PromptForChoice("Install $softwareType", $null, $choices, 1);
+$softwareMap = @{
+    general   = @("7zip.7zip", "Mozilla.Firefox");
+    media     = @("Spotify.Spotify", "Spicetify.Spicetify", "Discord.Discord", "MPC-BE.MPC-BE", "Valve.Steam", "qBittorrent.qBittorrent");
+    developer = @("Microsoft.VisualStudioCode", "Microsoft.WindowsTerminal", "Git.Git", "OpenJS.NodeJS");
+    admin     = @("AntibodySoftware.WizTree", "CPUID.HWMonitor", "KDE.KDEConnect", "Nvidia.GeForceExperience", "Guru3D.Afterburner");
+}
 
-    if ($decision -eq 0) {
 
-        $totalPrograms = $softwareList.Length;
-        $currentProgram = 0;
 
-        foreach ($program in $softwareList) {
-            $programName = $program.Split(".")[-1];
-            $percentComplete = ($currentProgram / $totalPrograms) * 100;
-            $listPlacement = $currentProgram + 1;
-            Write-Progress -Activity "Installing $softwareType" -Status "$programName [$percentComplete%][$listPlacement of $totalPrograms]" -PercentComplete $percentComplete;
-            Invoke-Expression "winget install -e --id $program" > $null;
-            $currentProgram++;
-        }
+if (-Not $selected) {
 
-        Write-Progress -Activity "Installing $softwareType" -Status "Done" -Completed;
-        return 1
-    }
-
-    Write-Host "Not installed $softwareType";
+    Write-Output "No programs installed";
+    Uninstall-Module PSMenu;
     return 0
 }
-# Install programs
 
-$GeneralSoftware = "7zip.7zip", "Mozilla.Firefox";
-$MediaSoftware = "Spotify.Spotify", "Spicetify.Spicetify", "Discord.Discord", "MPC-BE.MPC-BE", "Valve.Steam";
-$DevSoftware = "Microsoft.VisualStudioCode", "Microsoft.WindowsTerminal", "Git.Git", "OpenJS.NodeJS";
+# List of programs to be installed
+$softwareList = @();
+foreach ($type in $selected) {
+    $currentSoftware = $softwareMap[$type];
+    $softwareList += $currentSoftware;
+}
 
-$installedGeneral = Install-Software $GeneralSoftware "General software";
-$installedMedia = Install-Software $MediaSoftware "Media";
-$installedDev = Install-Software $DevSoftware "Developer software";
+# Install each program
+$totalPrograms = $softwareList.Count;
+for ($index = 0; $index -lt $totalPrograms; $index++) {
+    $program = $softwareList[$index];
+    $naturalIndex = $index + 1;
+    $percentComplete = [Math]::floor(($index / $totalPrograms) * 100)
+    $programName = $program.Split(".")[-1];
 
+    Write-Progress -Activity "Installing programs" -Status "$programName [$percentComplete%][$naturalIndex of $totalPrograms]" -PercentComplete $percentComplete;
+    # Invoke-Expression "winget install -e --id $program"
+    Start-Sleep -Seconds 1
+}
+Write-Progress -Activity "Installing programs" -Completed
 
-# Setup commands
+# Config for programs
 
-if ($installedMedia -eq 1) {
+Write-Output "Configuring installed programs"
+
+if ($softwareList.Contains("Spicetify.Spicetify")) {
+
+    Write-Output "Configuring Spicetify"
+
     spicetify config > $null;
 
     spicetify config extensions bookmark.js > $null;
@@ -56,4 +61,10 @@ if ($installedMedia -eq 1) {
 
     spicetify backup apply > $null;
 
+    Write-Output "Finished configuring spicetify"
 }
+
+Write-Output "Finished configuration"
+
+# End script
+Uninstall-Module PSMenu
