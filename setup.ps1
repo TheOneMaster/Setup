@@ -36,8 +36,7 @@ for ($index = 0; $index -lt $totalPrograms; $index++) {
     $programName = $program.Split(".")[-1];
 
     Write-Progress -Activity "Installing programs" -Status "$programName [$percentComplete%][$naturalIndex of $totalPrograms]" -PercentComplete $percentComplete;
-    # Invoke-Expression "winget install -e --id $program"
-    Start-Sleep -Seconds 1
+    Invoke-Expression "winget install -e --id $program"
 }
 Write-Progress -Activity "Installing programs" -Completed
 
