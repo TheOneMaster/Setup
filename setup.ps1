@@ -15,11 +15,12 @@ function Install-Software {
         $currentProgram = 0;
 
         foreach ($program in $softwareList) {
-            $currentProgram++;
-            $programName = $program.Split(" ")[-1].Split(".")[-1];
+            $programName = $program.Split(".")[-1];
             $percentComplete = ($currentProgram / $totalPrograms) * 100;
-            Write-Progress -Activity "Installing $softwareType" -Status "$programName [$percentComplete%]" -PercentComplete $percentComplete;
-            Invoke-Expression $program > $null;
+            $listPlacement = $currentProgram + 1;
+            Write-Progress -Activity "Installing $softwareType" -Status "$programName [$percentComplete%][$listPlacement of $totalPrograms]" -PercentComplete $percentComplete;
+            Invoke-Expression "winget install -e --id $program" > $null;
+            $currentProgram++;
         }
 
         Write-Progress -Activity "Installing $softwareType" -Status "Done" -Completed;
@@ -31,19 +32,9 @@ function Install-Software {
 }
 # Install programs
 
-$GeneralSoftware = "winget install -e --id 7zip.7zip",
-"winget install -e --id Mozilla.Firefox";
-
-$MediaSoftware = "winget install -e --id Spotify.Spotify",
-"winget install -e --id Spicetify.Spicetify",
-"winget install -e --id Discord.Discord",
-"winget install -e --id MPC-BE.MPC-BE",
-"winget install -e --id Valve.Steam";
-
-$DevSoftware = "winget install -e --id Microsoft.VisualStudioCode",
-"winget install -e --id Microsoft.WindowsTerminal",
-"winget install -e --id Git.Git",
-"winget install -e --id OpenJS.NodeJS"
+$GeneralSoftware = "7zip.7zip", "Mozilla.Firefox";
+$MediaSoftware = "Spotify.Spotify", "Spicetify.Spicetify", "Discord.Discord", "MPC-BE.MPC-BE", "Valve.Steam";
+$DevSoftware = "Microsoft.VisualStudioCode", "Microsoft.WindowsTerminal", "Git.Git", "OpenJS.NodeJS";
 
 $installedGeneral = Install-Software $GeneralSoftware "General software";
 $installedMedia = Install-Software $MediaSoftware "Media";
